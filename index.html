@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torneo de Ping Pong</title>
+<style>
+  :root{
+    --bg:#0f1117;
+    --panel:#171a23;
+    --panel2:#1e2230;
+    --text:#f5f7fb;
+    --muted:#9aa3b2;
+    --line:#303646;
+    --accent:#5eead4;
+    --accent2:#60a5fa;
+    --danger:#fb7185;
+    --gold:#fbbf24;
+    --shadow:0 14px 40px rgba(0,0,0,.28);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:radial-gradient(circle at top,#1a2030 0,#0f1117 45%);
+    color:var(--text);
+    min-height:100vh;
+  }
+
+  .app{max-width:1200px;margin:auto;padding:24px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px}
+  h1{margin:0;font-size:clamp(28px,5vw,44px);line-height:1}
+  .subtitle{color:var(--muted);margin-top:8px}
+  .ball{font-size:42px;filter:drop-shadow(0 8px 18px rgba(255,255,255,.08))}
+
+  .panel{
+    background:rgba(23,26,35,.92);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px;
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(8px);
+  }
+
+  .setup{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+  @media (max-width:800px){.setup{grid-template-columns:1fr}}
+
+  .input-row{display:flex;gap:10px}
+  input{
+    width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);
+    background:#0f1219;color:var(--text);outline:none;font-size:15px;
+  }
+  input:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(96,165,250,.14)}
+
+  button{
+    border:0;border-radius:12px;padding:12px 15px;font-weight:700;cursor:pointer;
+    background:var(--panel2);color:var(--text);border:1px solid var(--line);
+    transition:.18s transform,.18s opacity,.18s background;
+  }
+  button:hover{transform:translateY(-1px)}
+  button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .primary{background:linear-gradient(135deg,var(--accent2),#818cf8);border:0}
+  .success{background:linear-gradient(135deg,#14b8a6,#22c55e);border:0}
+  .danger{background:rgba(251,113,133,.13);border-color:rgba(251,113,133,.3);color:#fecdd3}
+  .ghost{background:transparent}
+
+  .count{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:14px;margin-top:10px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+
+  .players{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;min-height:42px}
+  .player{
+    display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);
+    background:#11141c;border-radius:999px;
+  }
+  .player button{padding:2px 7px;border-radius:99px;font-size:13px;background:transparent;color:#cbd5e1;border:0}
+
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:15px}
+
+  .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media (max-width:600px){.info-grid{grid-template-columns:1fr}}
+  .info{
+    background:#11141c;border:1px solid var(--line);border-radius:14px;padding:13px
+  }
+  .info strong{display:block;font-size:22px}
+  .info span{color:var(--muted);font-size:13px}
+
+  #bracketSection{display:none;margin-top:20px}
+  .section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .section-head h2{margin:0}
+
+  .legend{color:var(--muted);font-size:14px}
+
+  .bracket{
+    display:flex;gap:18px;overflow-x:auto;padding:8px 3px 14px;
+    scrollbar-width:thin;
+  }
+
+  .round{
+    min-width:255px;flex:1;
+  }
+  .round-title{
+    position:sticky;left:0;
+    text-align:center;font-weight:800;margin-bottom:12px;
+    padding:10px;border-radius:12px;background:#11141c;border:1px solid var(--line)
+  }
+
+  .round-matches{
+    display:flex;flex-direction:column;justify-content:space-around;
+    gap:12px;height:calc(100% - 54px);
+  }
+
+  .match{
+    background:#151923;border:1px solid var(--line);border-radius:15px;padding:10px;
+    position:relative;box-shadow:0 8px 20px rgba(0,0,0,.16);
+  }
+
+  .match.bye{border-style:dashed;opacity:.78}
+  .match.completed{border-color:rgba(94,234,212,.55)}
+  .match.live{border-color:rgba(96,165,250,.65);box-shadow:0 0 0 2px rgba(96,165,250,.08)}
+
+  .match-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:7px}
+  .slot{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:9px 8px;border-radius:10px;background:#0f1219;margin-top:5px;
+  }
+  .slot.winner{background:rgba(94,234,212,.1);outline:1px solid rgba(94,234,212,.2)}
+  .slot.bye-slot{color:var(--muted)}
+  .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .score{
+    min-width:28px;text-align:center;font-weight:800;
+    color:#dbeafe;
+  }
+  .unknown{color:#667085;font-style:italic}
+
+  .match-controls{display:flex;gap:8px;margin-top:8px}
+  .score-btn{flex:1;padding:9px;font-size:13px}
+  .score-btn.p1{background:rgba(96,165,250,.13);border-color:rgba(96,165,250,.25)}
+  .score-btn.p2{background:rgba(129,140,248,.13);border-color:rgba(129,140,248,.25)}
+  .reset-match{padding:9px 11px}
+
+  .champion{
+    margin-top:20px;
+    display:none;
+    background:linear-gradient(135deg,rgba(251,191,36,.16),rgba(94,234,212,.10));
+    border:1px solid rgba(251,191,36,.36);
+    border-radius:18px;padding:18px;text-align:center;
+  }
+  .champion .trophy{font-size:46px}
+  .champion h3{margin:5px 0 0;font-size:26px}
+  .champion p{margin:6px 0 0;color:var(--muted)}
+
+  .empty{text-align:center;color:var(--muted);padding:24px}
+  .notice{
+    background:rgba(96,165,250,.08);
+    border:1px solid rgba(96,165,250,.18);
+    color:#cfe1ff;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px
+  }
+
+  @media (max-width:600px){
+    .app{padding:14px}
+    .panel{padding:14px}
+    .round{min-width:230px}
+    .ball{font-size:34px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>🏓 Torneo de Ping Pong</h1>
+      <div class="subtitle">Eliminación directa · fixture automático · se adapta a cualquier cantidad de jugadores</div>
+    </div>
+    <div class="ball">🏓</div>
+  </header>
+
+  <section class="setup">
+    <div class="panel">
+      <h2>Participantes</h2>
+      <div class="input-row">
+        <input id="nameInput" type="text" maxlength="40" placeholder="Nombre del participante">
+        <button class="primary" id="addBtn">Agregar</button>
+      </div>
+      <div class="count"><span class="dot"></span><span id="countText">0 participantes</span></div>
+      <div id="players" class="players"></div>
+      <div class="actions">
+        <button class="success" id="generateBtn" disabled>🏆 Generar fixture</button>
+        <button class="danger" id="clearBtn">Vaciar</button>
+      </div>
+      <div class="notice">
+        Se usa la siguiente potencia de 2 disponible: 2, 4, 8, 16, 32… Los lugares sobrantes reciben BYE y pasan automáticamente de ronda.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Estado del torneo</h2>
+      <div class="info-grid">
+        <div class="info"><strong id="infoPlayers">0</strong><span>Jugadores</span></div>
+        <div class="info"><strong id="infoSlots">—</strong><span>Cuadro</span></div>
+        <div class="info"><strong id="infoRounds">—</strong><span>Rondas</span></div>
+      </div>
+      <div class="notice">
+        En cada partido tocá el botón del ganador. El ganador avanza automáticamente al siguiente cruce.
+      </div>
+    </div>
+  </section>
+
+  <section id="bracketSection" class="panel">
+    <div class="section-head">
+      <div>
+        <h2>Fixture</h2>
+        <div id="bracketLegend" class="legend"></div>
+      </div>
+      <button id="newTournamentBtn" class="ghost">Nuevo torneo</button>
+    </div>
+    <div id="bracket" class="bracket"></div>
+    <div id="champion" class="champion">
+      <div class="trophy">🏆</div>
+      <div>CAMPEÓN DEL TORNEO</div>
+      <h3 id="championName"></h3>
+      <p>¡Torneo terminado!</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  let players = [];
+  let tournament = null;
+
+  const nameInput = $("nameInput");
+  const playersEl = $("players");
+  const countText = $("countText");
+  const generateBtn = $("generateBtn");
+
+  function escapeHTML(str){
+    return str.replace(/[&<>"']/g, ch => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[ch]));
+  }
+
+  function updatePlayersUI(){
+    countText.textContent = `${players.length} participante${players.length === 1 ? "" : "s"}`;
+    $("infoPlayers").textContent = players.length;
+    generateBtn.disabled = players.length < 2;
+
+    if (!players.length){
+      playersEl.innerHTML = '<div class="empty" style="width:100%">Todavía no agregaste jugadores.</div>';
+      return;
+    }
+
+    playersEl.innerHTML = players.map((name, i) => `
+      <div class="player">
+        <span>${escapeHTML(name)}</span>
+        <button title="Quitar jugador" onclick="removePlayer(${i})">✕</button>
+      </div>
+    `).join("");
+  }
+
+  window.removePlayer = (index) => {
+    players.splice(index, 1);
+    updatePlayersUI();
+  };
+
+  function addPlayer(){
+    const name = nameInput.value.trim();
+    if(!name) return;
+    if(players.some(p => p.toLowerCase() === name.toLowerCase())){
+      alert("Ese nombre ya está agregado.");
+      return;
+    }
+    players.push(name);
+    nameInput.value = "";
+    nameInput.focus();
+    updatePlayersUI();
+  }
+
+  $("addBtn").addEventListener("click", addPlayer);
+  nameInput.addEventListener("keydown", e => {
+    if(e.key === "Enter") addPlayer();
+  });
+
+
+
+  $("clearBtn").addEventListener("click", () => {
+    players = [];
+    tournament = null;
+    $("bracketSection").style.display = "none";
+    updatePlayersUI();
+  });
+
+  $("newTournamentBtn").addEventListener("click", () => {
+    tournament = null;
+    $("bracketSection").style.display = "none";
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+
+  function nextPowerOf2(n){
+    let p = 1;
+    while(p < n) p *= 2;
+    return p;
+  }
+
+  function roundName(size){
+    const map = {
+      2:"Final",
+      4:"Semifinales",
+      8:"Cuartos de final",
+      16:"Octavos de final",
+      32:"Dieciseisavos de final",
+      64:"Treintaidosavos de final"
+    };
+    return map[size] || `Ronda de ${size}`;
+  }
+
+  function shuffle(arr){
+    const a = [...arr];
+    for(let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  function createTournament(){
+    if(players.length < 2) return;
+
+    const slots = nextPowerOf2(players.length);
+    const firstRoundPlayers = shuffle(players);
+    while(firstRoundPlayers.length < slots) firstRoundPlayers.push(null);
+
+    const rounds = [];
+    let matchCount = slots / 2;
+    let roundPlayers = firstRoundPlayers;
+
+    // Ronda inicial
+    let initialMatches = [];
+    for(let i=0;i<slots;i+=2){
+      initialMatches.push({
+        id: `r0m${i/2}`,
+        p1: roundPlayers[i],
+        p2: roundPlayers[i+1],
+        s1: null, s2: null,
+        winner: null,
+        manual: false,
+        bye: false
+      });
+    }
+
+    // Resolver BYEs: si exactamente uno está vacío, el otro avanza.
+    initialMatches.forEach(m => {
+      if(m.p1 && !m.p2){ m.winner=m.p1; m.bye=true; }
+      if(!m.p1 && m.p2){ m.winner=m.p2; m.bye=true; }
+    });
+
+    rounds.push({size:slots, name:roundName(slots), matches:initialMatches});
+
+    let size = slots;
+    while(size > 2){
+      const prev = rounds[rounds.length-1];
+      const nextMatches = [];
+      for(let i=0;i<prev.matches.length;i+=2){
+        nextMatches.push({
+          id:`r${rounds.length}m${i/2}`,
+          p1:null,p2:null,s1:null,s2:null,winner:null,manual:false,bye:false
+        });
+      }
+      rounds.push({size:size/2, name:roundName(size/2), matches:nextMatches});
+      size /= 2;
+    }
+
+    tournament = {slots, rounds};
+    propagateAll();
+    $("bracketSection").style.display = "block";
+    $("infoSlots").textContent = slots;
+    $("infoRounds").textContent = rounds.length;
+    $("bracketLegend").textContent =
+      `${players.length} jugadores · cuadro de ${slots} · ${rounds.length} ${rounds.length === 1 ? "ronda" : "rondas"}`;
+    render();
+    $("bracketSection").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  function propagateAll(){
+    // Ronda 0 ya tiene sus BYEs.
+    for(let r=1;r<tournament.rounds.length;r++){
+      const prev = tournament.rounds[r-1];
+      const cur = tournament.rounds[r];
+
+      prev.matches.forEach((pm, i) => {
+        const target = cur.matches[Math.floor(i/2)];
+        if(i % 2 === 0) target.p1 = pm.winner || null;
+        else target.p2 = pm.winner || null;
+      });
+
+      cur.matches.forEach(m => {
+        // Si quedó un solo jugador, es BYE automático.
+        if(m.p1 && !m.p2 && !m.manual){
+          m.winner = m.p1;
+          m.bye = true;
+        } else if(!m.p1 && m.p2 && !m.manual){
+          m.winner = m.p2;
+          m.bye = true;
+        } else if(!m.p1 || !m.p2){
+          if(!m.manual) m.winner = null;
+        }
+      });
+    }
+  }
+
+  function setWinner(roundIndex, matchIndex, winnerSlot){
+    const round = tournament.rounds[roundIndex];
+    const m = round.matches[matchIndex];
+    if(!m.p1 || !m.p2) return;
+
+    m.winner = winnerSlot === 1 ? m.p1 : m.p2;
+    m.s1 = winnerSlot === 1 ? 1 : 0;
+    m.s2 = winnerSlot === 2 ? 1 : 0;
+    m.manual = true;
+    m.bye = false;
+
+    // Resetear todo lo que venía después porque un resultado cambió.
+    for(let r=roundIndex+1;r<tournament.rounds.length;r++){
+      tournament.rounds[r].matches.forEach(next => {
+        next.p1=null; next.p2=null; next.s1=null; next.s2=null;
+        next.winner=null; next.manual=false; next.bye=false;
+      });
+    }
+
+    propagateAll();
+    render();
+  }
+
+  window.chooseWinner = setWinner;
+
+  window.resetMatch = (roundIndex, matchIndex) => {
+    const m = tournament.rounds[roundIndex].matches[matchIndex];
+    m.winner=null; m.s1=null; m.s2=null; m.manual=false; m.bye=false;
+
+    for(let r=roundIndex+1;r<tournament.rounds.length;r++){
+      tournament.rounds[r].matches.forEach(next => {
+        next.p1=null; next.p2=null; next.s1=null; next.s2=null;
+        next.winner=null; next.manual=false; next.bye=false;
+      });
+    }
+
+    propagateAll();
+    render();
+  };
+
+  function slotHTML(name, score, winner, unknownText="Pendiente"){
+    if(!name){
+      return `<div class="slot"><span class="name unknown">${unknownText}</span><span class="score">—</span></div>`;
+    }
+    return `<div class="slot ${winner ? "winner" : ""}">
+      <span class="name">${escapeHTML(name)}</span>
+      <span class="score">${score ?? ""}</span>
+    </div>`;
+  }
+
+  function render(){
+    if(!tournament) return;
+
+    const bracket = $("bracket");
+    bracket.innerHTML = tournament.rounds.map((round, rIndex) => {
+      return `
+        <div class="round">
+          <div class="round-title">${round.name}</div>
+          <div class="round-matches">
+            ${round.matches.map((m,mIndex) => {
+              const isBye = m.bye;
+              const p1Unknown = !m.p1 && !m.p2 ? "Por definir" : "BYE";
+              const p2Unknown = !m.p1 && !m.p2 ? "Por definir" : "BYE";
+
+              let controls = "";
+              if(m.p1 && m.p2){
+                controls = `
+                  <div class="match-controls">
+                    <button class="score-btn p1" onclick="chooseWinner(${rIndex},${mIndex},1)">🏓 ${escapeHTML(m.p1)}</button>
+                    <button class="score-btn p2" onclick="chooseWinner(${rIndex},${mIndex},2)">🏓 ${escapeHTML(m.p2)}</button>
+                    ${m.manual ? `<button class="reset-match danger" title="Borrar resultado" onclick="resetMatch(${rIndex},${mIndex})">↺</button>` : ""}
+                  </div>
+                `;
+              } else if(m.winner){
+                controls = `<div style="margin-top:8px;color:var(--muted);font-size:12px">✅ Avanza automáticamente</div>`;
+              }
+
+              return `
+                <div class="match ${m.manual ? "completed" : ""} ${isBye ? "bye" : ""}">
+                  <div class="match-label">Partido ${mIndex+1}${isBye ? " · BYE" : ""}</div>
+                  ${m.p1
+                    ? slotHTML(m.p1, m.s1, m.winner===m.p1)
+                    : slotHTML(null, null, false, p1Unknown)}
+                  ${m.p2
+                    ? slotHTML(m.p2, m.s2, m.winner===m.p2)
+                    : slotHTML(null, null, false, p2Unknown)}
+                  ${controls}
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    const finalRound = tournament.rounds[tournament.rounds.length-1];
+    const finalMatch = finalRound.matches[0];
+    const champion = finalMatch && finalMatch.winner && finalMatch.manual;
+    $("champion").style.display = champion ? "block" : "none";
+    if(champion) $("championName").textContent = finalMatch.winner;
+  }
+
+  $("generateBtn").addEventListener("click", createTournament);
+
+  updatePlayersUI();
+})();
+</script>
+</body>
+</html>
