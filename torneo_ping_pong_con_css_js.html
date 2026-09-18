@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torneo de Ping Pong</title>
+  <link rel="stylesheet" href="torneo_ping_pong.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>🏓 Torneo de Ping Pong</h1>
+      <div class="subtitle">Eliminación directa · fixture automático · se adapta a cualquier cantidad de jugadores</div>
+    </div>
+    <div class="ball">🏓</div>
+  </header>
+
+  <section class="setup">
+    <div class="panel">
+      <h2>Participantes</h2>
+      <div class="input-row">
+        <input id="nameInput" type="text" maxlength="40" placeholder="Nombre del participante">
+        <button class="primary" id="addBtn">Agregar</button>
+      </div>
+      <div class="count"><span class="dot"></span><span id="countText">0 participantes</span></div>
+      <div id="players" class="players"></div>
+      <div class="actions">
+        <button class="success" id="generateBtn" disabled>🏆 Generar fixture</button>
+        <button class="danger" id="clearBtn">Vaciar</button>
+      </div>
+      <div class="notice">
+        Se usa la siguiente potencia de 2 disponible: 2, 4, 8, 16, 32… Los lugares sobrantes reciben BYE y pasan automáticamente de ronda.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Estado del torneo</h2>
+      <div class="info-grid">
+        <div class="info"><strong id="infoPlayers">0</strong><span>Jugadores</span></div>
+        <div class="info"><strong id="infoSlots">—</strong><span>Cuadro</span></div>
+        <div class="info"><strong id="infoRounds">—</strong><span>Rondas</span></div>
+      </div>
+      <div class="notice">
+        En cada partido tocá el botón del ganador. El ganador avanza automáticamente al siguiente cruce.
+      </div>
+    </div>
+  </section>
+
+  <section id="bracketSection" class="panel">
+    <div class="section-head">
+      <div>
+        <h2>Fixture</h2>
+        <div id="bracketLegend" class="legend"></div>
+      </div>
+      <button id="newTournamentBtn" class="ghost">Nuevo torneo</button>
+    </div>
+    <div id="bracket" class="bracket"></div>
+    <div id="champion" class="champion">
+      <div class="trophy">🏆</div>
+      <div>CAMPEÓN DEL TORNEO</div>
+      <h3 id="championName"></h3>
+      <p>¡Torneo terminado!</p>
+    </div>
+  </section>
+</div>
+
+  <script src="torneo_ping_pong.js"></script>
+</body>
+</html>
